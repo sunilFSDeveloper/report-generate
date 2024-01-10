@@ -1,2 +1,2 @@
 # time-calculate
-calculate the which is spend on desk
+## Calculate the time which is spend on the desk
