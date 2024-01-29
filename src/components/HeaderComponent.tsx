@@ -1,14 +1,16 @@
 import { CheckOutlined, Edit } from '@mui/icons-material';
 import { Button, CardHeader, TextField } from '@mui/material';
 import React, { ChangeEvent, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, saveHeader } from '../store/reducer';
 
 const HeaderComponent: React.FC = () => {
 
   const [editHeader, setEditHeader] = useState(false)
-  const [salutationHeading, setSalutationHeading] = useState('Good Evening Sir,')
-  const [salutationSubtitle, setSalutationSubtitle] = useState('Today I`ve worked on following Projects')
+  const [salutationHeading, setSalutationHeading] = useState('')
+  const [salutationSubtitle, setSalutationSubtitle] = useState('')
   const dispatch = useDispatch()
+  const headerText = useSelector((state: RootState) => state.headerText)
 
   const handleSalutationHeadingChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSalutationHeading(e.target.value);
@@ -18,7 +20,7 @@ const HeaderComponent: React.FC = () => {
   }
 
   const handleSaveHeader = () => {
-    dispatch({ type: 'SAVE_HEADER', payload: {'title': salutationHeading, 'subTitle': salutationSubtitle}})
+    dispatch(saveHeader({'title': salutationHeading, 'subTitle': salutationSubtitle}))
     setEditHeader(false)
   }
 
@@ -57,7 +59,7 @@ const HeaderComponent: React.FC = () => {
           }}
           onChange={handleSalutationHeadingChange}
         />
-        : "Good Evening Sir,"
+        : headerText.title
       }
       subheader={
         editHeader ?
@@ -72,7 +74,7 @@ const HeaderComponent: React.FC = () => {
           onChange={handleSalutationSubtitleChange}
 
         />
-        : "Today I've worked on following Projects"
+        : headerText.subTitle
       }
       sx={{height: 'auto'}}
     />
