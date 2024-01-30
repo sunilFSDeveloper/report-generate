@@ -7,7 +7,7 @@ import {
   Paper,
 } from '@mui/material';
 import HeaderComponent from './HeaderComponent';
-import BodyComponent from './BodyComponent';
+import TaskParentComponent from './TaskParentComponent';
 import TimeDetailsComponent from './TimeDetailsComponent';
 import FinalReportComponent from './FinalReportComponent';
 
@@ -20,9 +20,9 @@ const Report: React.FC = () => {
           <HeaderComponent />
         </Paper>
         <CardContent>
-          <Grid container spacing={2} paddingX={2}>
+          <Grid container>
             <Grid item xs={7}>
-              <BodyComponent />
+              <TaskParentComponent />
             </Grid>
             <Grid item xs={5}>
               <Paper elevation={2} sx={{p: 2, mb: 1}}>
