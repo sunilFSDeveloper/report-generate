@@ -2,18 +2,15 @@ import { AddCircleOutlined } from '@mui/icons-material';
 import { DeleteOutline } from '@mui/icons-material';
 import {
   Button,
+  Grid,
   IconButton,
-  List,
-  ListItem,
   Paper,
   TextField,
-  Typography
 } from '@mui/material';
 import React, { ChangeEvent, useState } from 'react';
 
 const TaskComponent: React.FC = () => {
 
-  const [editProjectDetails, setEditProjectDetails] = useState(true)
   const [projectHeading, setProjectHeading] = useState('')
 
   const uniqueId = () => Math.random().toString(36).substring(7);
@@ -40,70 +37,63 @@ const TaskComponent: React.FC = () => {
   
   return (
     <>
-      <Paper elevation={2} sx={{p: 2, mb: 1, pb: 0 }}>
-        { editProjectDetails ?
-            <TextField
-              label="Project Heading"
-              variant="outlined"
-              value={projectHeading}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setProjectHeading(e.target.value)}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              sx={{ 
-                width: 350,
-                '& .MuiInputBase-input': {
-                  height: '5px',
-                },
-              }}
-            />
-            :
-            <Typography variant="h6">
-              Project Heading
-            </Typography>
-        }
+      <Paper elevation={2} sx={{p: 2, mb: 1, maxWidth: '100%' }} >
+        <TextField
+          label="Project Heading"
+          variant="outlined"
+          value={projectHeading}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setProjectHeading(e.target.value)}
+          InputLabelProps={{
+            shrink: true,
+          }}
+          sx={{ 
+            width: 350,
+            '& .MuiInputBase-input': {
+              height: '5px',
+            },
+          }}
+        />
         <Button
           variant="outlined"
           startIcon={<AddCircleOutlined />}
           size='medium'
-          sx={{ml: 2, mt: 1}}
+          sx={{ ml: 3 }}
           onClick={addTaskField}
           >
           Task
         </Button>
-        <List dense>
-          {fields.map((field, index) => (
-            <ListItem
-            secondaryAction={index !==0 &&
+        {fields.map((field, index) => (
+        <Grid container spacing={2} key={field.id} sx={{ m: 0.5 }}>
+          <Grid item xs={10}>
+            <TextField
+              label="Project Task"
+              variant="outlined"
+              value={field.value}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-input': {
+                  height: '5px',
+                },
+              }}
+              onChange={(e) => handleFieldChange(index, e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={2}>
+            {index !== 0 && (
               <IconButton
                 edge="end"
                 aria-label="delete"
                 onClick={() => deleteField(index)}
               >
-                <DeleteOutline color='error' />
+                <DeleteOutline color="error" />
               </IconButton>
-            } 
-            >
-                <div key={field.id}>
-                  <TextField
-                    label="Project Task"
-                    variant="outlined"
-                    value={field.value}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    sx={{
-                      width: 500,
-                      '& .MuiInputBase-input': {
-                        height: '5px',
-                      },
-                    }}
-                    onChange={(e) => handleFieldChange(index, e.target.value)}
-                  />
-                </div>
-            </ListItem>
-          ))}
-        </List>
+            )}
+          </Grid>
+        </Grid>
+      ))}
       </Paper>
     </>
   )

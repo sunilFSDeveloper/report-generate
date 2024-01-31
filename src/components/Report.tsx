@@ -14,21 +14,29 @@ import FinalReportComponent from './FinalReportComponent';
 const Report: React.FC = () => {
 
   return (
-    <Container style={{ justifyContent: 'center', alignItems: 'center' }}>
-      <Card sx={{ margin: 2}}>
-        <Paper elevation={2} sx={{m: 2, mb: 0}}>
+    <Container
+      style={{
+        justifyContent: 'center',
+        alignItems: 'center',
+        maxWidth: '100%'
+        }}
+    >
+      <Card sx={{ margin: 2 }}>
+        <Paper elevation={2} sx={{ m: 2, mb: 0 }}>
           <HeaderComponent />
         </Paper>
         <CardContent>
-          <Grid container>
-            <Grid item xs={7}>
+          <Grid container spacing={2}>
+            <Grid item sm={12} lg={5}>
               <TaskParentComponent />
             </Grid>
-            <Grid item xs={5}>
-              <Paper elevation={2} sx={{p: 2, mb: 1}}>
+            <Grid item sm={12} lg={4}>
+              <Paper  sx={{ p: 2 }}>
                 <TimeDetailsComponent />
               </Paper>
-              <Paper elevation={2} sx={{p: 2, mb: 1}}>
+            </Grid>
+            <Grid item sm={12} lg={3}>
+              <Paper sx={{ p: 2 }}>
                 <FinalReportComponent />
               </Paper>
             </Grid>
