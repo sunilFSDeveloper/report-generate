@@ -2,8 +2,8 @@ import { AddCircleOutlined } from '@mui/icons-material';
 import { DeleteOutline } from '@mui/icons-material';
 import {
   Button,
-  IconButton,
-  ListItem,
+  Grid,
+  IconButton
 } from '@mui/material';
 import React, { useState } from 'react';
 import TaskComponent from './TaskComponent';
@@ -29,21 +29,24 @@ const TaskParentComponent: React.FC = () => {
   return (
     <>
       {projects.map((field, index) => (
-        <ListItem
-          secondaryAction={index !==0 &&
-            <IconButton
-              edge="start"
-              aria-label="delete"
-              onClick={() => deleteField(index)}
-            >
-              <DeleteOutline color='error' />
-            </IconButton>
-          } 
-          >
-            <div key={field.id}>
+        <Grid container spacing={2} key={field.id}>
+          <Grid item xs={11}>
+            <div>
               <TaskComponent />
             </div>
-        </ListItem>
+          </Grid>
+          <Grid item xs={1}>
+            {index !== 0 && (
+              <IconButton
+                edge="start"
+                aria-label="delete"
+                onClick={() => deleteField(index)}
+              >
+                <DeleteOutline color="error" />
+              </IconButton>
+            )}
+          </Grid>
+        </Grid>
       ))}
       <Button
         variant="outlined"
