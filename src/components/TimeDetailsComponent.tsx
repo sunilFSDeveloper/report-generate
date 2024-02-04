@@ -46,30 +46,47 @@ const TimeDetailsComponent: React.FC = () => {
     setTimeRows(updatedRows);
   }
 
+  const formatTime = (milliseconds: number) => {
+    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+
+    return `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+  }
+
+  const timeToDateTime = (time: string) => {
+    return new Date(`2022-01-01T${time}`)
+  }
+
   const calculateTime = () => {
-    const startTimeDate = new Date(`2022-01-01T${startTime}`)
-    const endTimeDate = new Date(`2022-01-01T${endTime}`)
-    const lunchStartTimeDate = new Date(`2022-01-01T${lunchStartTime}`)
-    const lunchEndTimeDate = new Date(`2022-01-01T${lunchEndTime}`)
+    const startTimeDate = timeToDateTime(startTime)
+    const endTimeDate = timeToDateTime(endTime)
+    const lunchStartTimeDate = timeToDateTime(lunchStartTime)
+    const lunchEndTimeDate = timeToDateTime(lunchEndTime)
+    let totalBreackTime = 0
+    if (timeRows.length > 0) {
+      timeRows.forEach((timeRow) => {
+        const startBreakTimeDate = timeToDateTime(timeRow.startTime)
+        const endBreakTimeDate = timeToDateTime(timeRow.endTime)
+        const breakTimeString = endBreakTimeDate.getTime() - startBreakTimeDate.getTime()
+        totalBreackTime = totalBreackTime + (timeRow.manualTime ? Number(timeRow.manualTime) * 60 * 1000 : breakTimeString)
+      })
+    }
 
     const lunchTime = lunchEndTimeDate.getTime() - lunchStartTimeDate.getTime()
-    const totalFullTime = endTimeDate.getTime() - startTimeDate.getTime()
+    const totalFullTime = (endTimeDate.getTime() - startTimeDate.getTime()) - totalBreackTime
+    const totalTimeWithoutBreak = (endTimeDate.getTime() - startTimeDate.getTime()) - totalBreackTime
 
     const totalLunchTime = lunchManualTime ? Number(lunchManualTime) * 60 * 1000 : lunchTime
-    const finalTime = totalLunchTime ? totalFullTime - totalLunchTime : totalFullTime
+    const finalTime =totalLunchTime ? totalTimeWithoutBreak - totalLunchTime : totalTimeWithoutBreak
 
-    const hours = Math.floor(finalTime / (1000 * 60 * 60))
-    const minutes = Math.floor((finalTime % (1000 * 60 * 60)) / (1000 * 60))
-
-    console.log(finalTime, `${hours} hours ${minutes} minutes`)
     setTotalReportingTime(
       <>
-        <Typography variant="body1">Day Start Time: 12:12 AM</Typography>
-        <Typography variant="body1">Lunch Time: 20 Minutes</Typography>
-        <Typography variant="body1">Break: 10 Minutes</Typography>
-        <Typography variant="body1">Day End Time: 09:21 PM</Typography>
-        <Typography variant="body1">Today's Hour On Desk: 08:39</Typography>
-        <Typography variant="body1">Today's Total Hours: 09:09</Typography>
+        <Typography variant="body1">Day Start Time: {startTime}</Typography>
+        <Typography variant="body1">Lunch Time: {formatTime(totalLunchTime)}</Typography>
+        <Typography variant="body1">Break: {formatTime(totalBreackTime)}</Typography>
+        <Typography variant="body1">Day End Time: {endTime}</Typography>
+        <Typography variant="body1">Today's Hour On Desk: {formatTime(totalFullTime)}</Typography>
+        <Typography variant="body1">Today's Total Hours: {formatTime(finalTime)}</Typography>
       </>
     )
   }
@@ -261,7 +278,7 @@ const TimeDetailsComponent: React.FC = () => {
               },
             }}
             onChange={(e) => setEndTime(e.target.value)}
-          />
+                      />
         </Grid>
       </Grid>
       <Grid
