@@ -7,15 +7,19 @@ import {
 } from '@mui/material';
 import React, { useState } from 'react';
 import TaskComponent from './TaskComponent';
+import { useDispatch } from 'react-redux';
+import { saveProjects } from '../store/reducer';
 
 const TaskParentComponent: React.FC = () => {
 
   const uniqueId = () => Math.random().toString(36).substring(7);
+  const dispatch = useDispatch()
 
-  const [projects, setProjects] = useState<{ id: string; value: string }[]>([{id: uniqueId(), value: ''}])
+  const [projects, setProjects] = useState<{ id: string; value: [] }[]>([{id: uniqueId(), value: []}])
 
   const addProject = () => {
-    setProjects([...projects, { id: uniqueId(), value: '' }])
+    setProjects([...projects, { id: uniqueId(), value: [] }])
+    dispatch(saveProjects(projects))
   }
 
   const deleteField = (index: number) => {
@@ -32,7 +36,7 @@ const TaskParentComponent: React.FC = () => {
         <Grid container spacing={2} key={field.id}>
           <Grid item xs={11}>
             <div>
-              <TaskComponent />
+              <TaskComponent projectId={field.id} />
             </div>
           </Grid>
           <Grid item xs={1}>

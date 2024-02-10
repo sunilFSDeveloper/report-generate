@@ -8,23 +8,32 @@ import {
   TextField,
 } from '@mui/material';
 import React, { ChangeEvent, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { saveProjectFields } from '../store/reducer';
 
-const TaskComponent: React.FC = () => {
+interface TaskComponentProps {
+  projectId: string;
+}
+
+const TaskComponent: React.FC<TaskComponentProps> = ({projectId}) => {
 
   const [projectHeading, setProjectHeading] = useState('')
 
   const uniqueId = () => Math.random().toString(36).substring(7);
+  const dispatch = useDispatch()
 
-  const [fields, setFields] = useState<{ id: string; value: string }[]>([{id: uniqueId(), value: ''}])
+  const [fields, setFields] = useState<{ id: string; projectId: string; value: string }[]>([{id: uniqueId(), projectId: projectId, value: ''}])
 
   const addTaskField = () => {
-    setFields([...fields, { id: uniqueId(), value: '' }])
+    setFields([...fields, { id: uniqueId(), projectId: projectId, value: '' }])
+    dispatch(saveProjectFields(fields))
   }
 
-  const handleFieldChange = (index: number, value: string) => {
+  const handleFieldChange = (index: number, projectId: string, value: string) => {
     const updatedFields = [...fields];
     updatedFields[index].value = value;
     setFields(updatedFields);
+    console.log('updatedFields', updatedFields)
   }
 
   const deleteField = (index: number) => {
@@ -78,7 +87,7 @@ const TaskComponent: React.FC = () => {
                   height: '5px',
                 },
               }}
-              onChange={(e) => handleFieldChange(index, e.target.value)}
+              onChange={(e) => handleFieldChange(index, projectId, e.target.value)}
             />
           </Grid>
           <Grid item xs={2}>
