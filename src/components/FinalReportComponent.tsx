@@ -6,8 +6,16 @@ import {
   Typography
 } from '@mui/material';
 import React from 'react';
+import { RootState } from '../store/reducer';
+import { useSelector } from 'react-redux';
   
 const FinalReportComponent: React.FC = () => {
+
+  const headerText = useSelector((state: RootState) => state.headerText);
+  const projects = useSelector((state: RootState) => state.projects)
+  const projectFields = useSelector((state: RootState) => state.projectFields)
+
+console.log('projects', projects, 'projectFields', projectFields)
   return (
     <>
       <Typography variant="h6" gutterBottom sx={{display: 'flex', justifyContent: 'space-between'}}>
@@ -15,8 +23,8 @@ const FinalReportComponent: React.FC = () => {
         <Button variant="outlined" size='small' sx={{ml:1}} startIcon={<ContentCopy />}>Copy Report</Button>
       </Typography>
       <Typography variant="body1">
-        <Typography variant="subtitle2">Hello Sir, Good Evening!</Typography>
-        <Typography variant="body1">Today I have worked on the following task:</Typography>
+        <Typography variant="subtitle1">{headerText.title}</Typography>
+        <Typography variant="body1">{headerText.subTitle}</Typography>
         <Typography variant="body1">
         <Typography variant="body1" sx={{ pl: 2 }}>
             Other:
