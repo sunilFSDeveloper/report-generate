@@ -5,10 +5,9 @@ interface projectFields {
   value: string;
 }
 
-export interface projectDetails {
-  projectId: string;
-  projectHeading: string;
-  task: projectFields[];
+interface Project {
+  id: string;
+  value: projectFields[];
 }
 
 export interface RootState {
@@ -16,32 +15,23 @@ export interface RootState {
     title: string;
     subTitle: string;
   };
-  projectDetails: {
-    projectId: string;
-    projectHeading: string;
-    task: projectFields[];
+  projectFields: {
+    id: string;
+    value: string;
+  }[]
+  projects: {
+    id: string;
+    value: projectFields[];
   }[]
 }
-
-const uniqueId = Math.random().toString(36).substring(7)
 
 const initialState: RootState = {
   headerText: {
     title: 'Good Evening Sir,',
     subTitle: 'Today I`ve worked on following Projects',
   },
-  projectDetails: [
-    {
-      projectId: uniqueId,
-      projectHeading: 'Projecet Heading',
-      task: [
-        {
-          id: uniqueId,
-          value: ''
-        }
-      ]
-    }
-  ],
+  projects: [],
+  projectFields: []
 };
 
 const headerSlice = createSlice({
@@ -51,21 +41,17 @@ const headerSlice = createSlice({
     saveHeader: (state, action: PayloadAction<{ title: string; subTitle: string }>) => {
       state.headerText = action.payload;
     },
-    // saveProjects: (state, action: PayloadAction<Project>) => {
-    //   state.projects.push(action.payload);
-    // },
-    // deleteProjects: (state, action: PayloadAction<string>) => {
-    //   state.projects = state.projects.filter((project) => project.id !== action.payload);
-    // },
-    saveProjectDetails : (state, action: PayloadAction<projectDetails[]>) => {
-      state.projectDetails = action.payload;
+    saveProjects: (state, action: PayloadAction<Project>) => {
+      state.projects.push(action.payload);
     },
-
-    saveProjectTasks : (state, action: PayloadAction<projectFields[]>) => {
-      state.projectDetails[0].task = action.payload;
+    deleteProjects: (state, action: PayloadAction<string>) => {
+      state.projects = state.projects.filter((project) => project.id !== action.payload);
+    },
+    saveProjectFields : (state, action: PayloadAction<{id: string; projectId: string; value: string}[]>) => {
+      state.projectFields = action.payload;
     }
   },
 });
 
-export const { saveHeader, saveProjectDetails, saveProjectTasks } = headerSlice.actions;
+export const { saveHeader, saveProjects, saveProjectFields } = headerSlice.actions;
 export default headerSlice.reducer;
