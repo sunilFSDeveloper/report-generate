@@ -12,10 +12,10 @@ import { useSelector } from 'react-redux';
 const FinalReportComponent: React.FC = () => {
 
   const headerText = useSelector((state: RootState) => state.headerText);
-  // const projects = useSelector((state: RootState) => state.projects)
-  // const projectFields = useSelector((state: RootState) => state.projectFields)
+  const projects = useSelector((state: RootState) => state.projects)
+  const projectFields = useSelector((state: RootState) => state.projectFields)
 
-// console.log('projects', projects, 'projectFields', projectFields)
+console.log('projects', projects, 'projectFields', projectFields)
   return (
     <>
       <Typography variant="h6" gutterBottom sx={{display: 'flex', justifyContent: 'space-between'}}>
