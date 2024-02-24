@@ -8,7 +8,6 @@ import {
 import React, { useState } from 'react';
 import TaskComponent from './TaskComponent';
 import { useDispatch } from 'react-redux';
-import { saveProjects } from '../store/reducer';
 
 const TaskParentComponent: React.FC = () => {
 
@@ -19,7 +18,7 @@ const TaskParentComponent: React.FC = () => {
 
   const addProject = () => {
     setProjects([...projects, { id: uniqueId(), value: [] }])
-    dispatch(saveProjects(projects))
+    // dispatch(saveProjects(projects))
   }
 
   const deleteField = (index: number) => {
