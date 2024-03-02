@@ -6,32 +6,43 @@ import {
   RestoreOutlined,
 } from '@mui/icons-material';
 import {
+  Alert,
   Button,
+  CircularProgress,
   Grid,
   IconButton,
+  Snackbar,
   TextField,
   Typography
 } from '@mui/material';
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { saveLocalTime } from '../store/reducer';
+import { LocalizationProvider, TimeField } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import ReactDOM from 'react-dom';
 
 interface TimeRow {
-  startTime: string;
-  endTime: string;
-  manualTime: string;
+  startTime: Dayjs | null;
+  endTime: Dayjs | null;
+  manualTime: Dayjs | null;
 }
 
 const TimeDetailsComponent: React.FC = () => {
 
   const [timeRows, setTimeRows] = useState<TimeRow[]>([])
-  const [startTime, setStartTime] = useState('')
-  const [lunchStartTime, setLunchStartTime] = useState('')
-  const [lunchEndTime, setLunchEndTime] = useState('')
-  const [lunchManualTime, setLunchManualTime] = useState('')
-  const [endTime, setEndTime] = useState('')
+  const [startTime, setStartTime] = useState<Dayjs | null>(null)
+  const [lunchStartTime, setLunchStartTime] = useState<Dayjs | null>(null)
+  const [lunchEndTime, setLunchEndTime] = useState<Dayjs | null>(null)
+  const [lunchManualTime, setLunchManualTime] = useState<Dayjs | null>(null)
+  const [endTime, setEndTime] = useState<Dayjs | null>(null)
   const [totalReportingTime, setTotalReportingTime] = useState<ReactElement | undefined>()
 
+  const dispatch = useDispatch()
+
   const handleAddRow = () => {
-    setTimeRows([...timeRows, { startTime: '', endTime: '', manualTime: '' }]);
+    setTimeRows([...timeRows, { startTime: dayjs('2022-04-17T00:00'), endTime: dayjs('2022-04-17T00:00'), manualTime: dayjs('2022-04-17T00:00') }]);
   };
 
   const handleRemoveRow = (index: number) => {
@@ -40,63 +51,113 @@ const TimeDetailsComponent: React.FC = () => {
     setTimeRows(updatedRows);
   };
 
-  const handleChange = (index: number, field: keyof TimeRow, value: string) => {
+  const handleChange = (index: number, field: keyof TimeRow, value: Dayjs | null) => {
     const updatedRows = [...timeRows];
-    updatedRows[index][field] = value;
-    setTimeRows(updatedRows);
-  }
-
-  const formatTime = (milliseconds: number) => {
-    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
-    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-
-    return `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
-  }
-
-  const timeToDateTime = (time: string) => {
-    return new Date(`2022-01-01T${time}`)
+    if (value !== null) {
+      updatedRows[index][field] = value;
+      setTimeRows(updatedRows);
+    }
   }
 
   const calculateTime = () => {
-    const startTimeDate = timeToDateTime(startTime)
-    const endTimeDate = timeToDateTime(endTime)
-    const lunchStartTimeDate = timeToDateTime(lunchStartTime)
-    const lunchEndTimeDate = timeToDateTime(lunchEndTime)
-    let totalBreackTime = 0
+    let totalBreakTime = 0;
+    let totalLunchTime = 0;
+
     if (timeRows.length > 0) {
       timeRows.forEach((timeRow) => {
-        const startBreakTimeDate = timeToDateTime(timeRow.startTime)
-        const endBreakTimeDate = timeToDateTime(timeRow.endTime)
-        const breakTimeString = endBreakTimeDate.getTime() - startBreakTimeDate.getTime()
-        totalBreackTime = totalBreackTime + (timeRow.manualTime ? Number(timeRow.manualTime) * 60 * 1000 : breakTimeString)
-      })
+        const startBreakTime = timeRow.startTime;
+        const endBreakTime = timeRow.endTime;
+        if (startBreakTime && endBreakTime) {
+          const differenceInMinutes = endBreakTime.diff(startBreakTime, 'minute');
+          totalBreakTime += differenceInMinutes;
+        }
+      });
     }
 
-    const lunchTime = lunchEndTimeDate.getTime() - lunchStartTimeDate.getTime()
-    const totalFullTime = (endTimeDate.getTime() - startTimeDate.getTime()) - totalBreackTime
-    const totalTimeWithoutBreak = (endTimeDate.getTime() - startTimeDate.getTime()) - totalBreackTime
+    if (lunchStartTime && lunchEndTime) {
+      const differenceInMinutes = lunchEndTime.diff(lunchStartTime, 'minute');
+      totalLunchTime = differenceInMinutes;
+    }
 
-    const totalLunchTime = lunchManualTime ? Number(lunchManualTime) * 60 * 1000 : lunchTime
-    const finalTime =totalLunchTime ? totalTimeWithoutBreak - totalLunchTime : totalTimeWithoutBreak
+    let totalFullTime = 0;
+    if (startTime && endTime) {
+      const differenceInMinutes = endTime.diff(startTime, 'minute');
+      totalFullTime = differenceInMinutes;
+    }
+
+    let finalTime = totalFullTime;
+    if (totalLunchTime > 0) {
+      finalTime -= totalLunchTime;
+    }
+    finalTime -= totalBreakTime;
+
+    const formatTime = (minutes: number) => {
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      return `${hours < 10 ? '0' + hours : hours}:${remainingMinutes < 10 ? '0' + remainingMinutes : remainingMinutes}`;
+    };
 
     setTotalReportingTime(
       <>
-        <Typography variant="body1">Day Start Time: {startTime}</Typography>
-        <Typography variant="body1">Lunch Time: {formatTime(totalLunchTime)}</Typography>
-        <Typography variant="body1">Break: {formatTime(totalBreackTime)}</Typography>
-        <Typography variant="body1">Day End Time: {endTime}</Typography>
-        <Typography variant="body1">Today's Hour On Desk: {formatTime(totalFullTime)}</Typography>
-        <Typography variant="body1">Today's Total Hours: {formatTime(finalTime)}</Typography>
+        <Typography variant="body2">Day Start Time: {startTime?.format('hh:mm A')}</Typography>
+        <Typography variant="body2">Lunch Time: {formatTime(totalLunchTime)}</Typography>
+        <Typography variant="body2">Break Time: {formatTime(totalBreakTime)}</Typography>
+        <Typography variant="body2">Day End Time: {endTime?.format('hh:mm A')}</Typography>
+        <Typography variant="body2">Today's Hour On Desk: {formatTime(finalTime)}</Typography>
+        <Typography variant="body2">Today's Total Hours: {formatTime(totalFullTime)}</Typography>
       </>
-    )
+    );
+
+    dispatch(saveLocalTime({
+      startTime: startTime,
+      totalLunchTime: totalLunchTime,
+      totalBreakTime: totalBreakTime,
+      endTime: endTime,
+      totalFullTime: totalFullTime,
+      finalTime: finalTime
+    }));
   }
 
   const resetReportTime = () => {
-    setStartTime('')
-    setLunchStartTime('')
-    setLunchEndTime('')
-    setLunchManualTime('')
-    setEndTime('')
+    setStartTime(null)
+    setLunchStartTime(null)
+    setLunchEndTime(null)
+    setLunchManualTime(null)
+    setEndTime(null)
+  }
+
+  const [loading, setLoading] = useState(false)
+  const [openMessage, setOpenMessage] = useState(false)
+
+  const [htmlContent, setHtmlContent] = useState('');
+  const timeRef = useRef(null);
+
+  const handleCopy = () => {
+    setLoading(true);
+    const cardNode = ReactDOM.findDOMNode(timeRef.current);
+  
+    if (cardNode instanceof HTMLElement) {
+      const content = cardNode.innerHTML;
+      const formattedText = content.replace(/<\/(p|div|h6)\s*>/gi, '\n');
+      const textContent = formattedText.replace(/<[^>]+>/g, '');
+  
+      setHtmlContent(textContent);
+      navigator.clipboard.writeText(textContent)
+        .then(() => {
+          setTimeout(() => {
+            setLoading(false);
+            setOpenMessage(true);
+          }, 600);
+        })
+        .catch((error) => {
+          setLoading(false);
+          console.error('Error copying text:', error);
+        });
+    }
+  }
+
+  const handleClose = () => {
+    setOpenMessage(false);
   }
 
   return (
@@ -104,74 +165,89 @@ const TimeDetailsComponent: React.FC = () => {
       <Typography variant="h5" gutterBottom sx={{display: 'flex', justifyContent: 'space-between'}}>
         Timing
       </Typography>
-      <Grid container spacing={3} sx={{ mt: 1 }}>
+      <Grid container spacing={3}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Grid item xs={12}>
-          <TextField
-            type='time'
+          <TimeField
             label="Start Time"
-            variant="outlined"
-            fullWidth
             value={startTime}
-            InputLabelProps={{
-              shrink: true
+            onChange={(newValue) => {
+              setStartTime(newValue);
             }}
             sx={{
               '& input': {
-                height: '30px',
+                width: '100%',
+                height: '15px',
                 padding: '10px',
+                fontSize: '12px'
               },
             }}
-            onChange={(e) => setStartTime(e.target.value)}
+            slots={{
+              textField: textFieldProps => <TextField
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                {...textFieldProps}
+              />
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <TextField
-            type="time"
+          <TimeField
             label="Lunch Start Time"
-            variant="outlined"
-            fullWidth
             value={lunchStartTime}
-            InputLabelProps={{
-              shrink: true
+            onChange={(newValue) => {
+              setLunchStartTime(newValue);
             }}
             sx={{
               '& input': {
-                height: '30px',
+                width: '100%',
+                height: '15px',
                 padding: '10px',
+                fontSize: '12px'
               },
             }}
-            onChange={(e) => setLunchStartTime(e.target.value)}
+            slots={{
+              textField: textFieldProps => <TextField
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                {...textFieldProps}
+              />
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <TextField
-            type="time"
+          <TimeField
             label="Lunch End Time"
-            variant="outlined"
-            fullWidth
             value={lunchEndTime}
-            InputLabelProps={{
-              shrink: true
+            onChange={(newValue) => {
+              setLunchEndTime(newValue);
             }}
             sx={{
               '& input': {
                 width: '100%',
-                height: '30px',
+                height: '15px',
                 padding: '10px',
+                fontSize: '12px'
               },
             }}
-            onChange={(e) => setLunchEndTime(e.target.value)}
+            slots={{
+              textField: textFieldProps => <TextField
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                {...textFieldProps}
+              />
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <TextField
-            type="text"
+          {/* <TimeField
             label="Lunch Manual Time"
-            variant="outlined"
-            fullWidth
             value={lunchManualTime}
-            InputLabelProps={{
-              shrink: true
+            onChange={(newValue) => {
+              setLunchManualTime(newValue);
             }}
             sx={{
               '& input': {
@@ -180,14 +256,21 @@ const TimeDetailsComponent: React.FC = () => {
                 padding: '10px',
               },
             }}
-            onChange={(e) => setLunchManualTime(e.target.value)}
-          />
+            slots={{
+              textField: textFieldProps => <TextField
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                {...textFieldProps}
+              />
+            }}
+          /> */}
         </Grid>
         <Button
-          variant="outlined"
+          variant="contained"
           startIcon={<AddCircleOutlined />}
-          size='medium'
-          sx={{ ml: 3, mt: 1 }}
+          size='small'
+          sx={{ ml: 3, mt: 2 }}
           onClick={handleAddRow}
           >
           Break
@@ -195,55 +278,62 @@ const TimeDetailsComponent: React.FC = () => {
         {timeRows.map((row, index) => (
         <Grid container spacing={2} key={index} sx={{ m: 1 }}>
           <Grid item xs={12} sm={4}>
-            <TextField
-              type="time"
+            <TimeField
               label="Start Time"
-              variant="outlined"
               value={row.startTime}
-              onChange={(e) => handleChange(index, 'startTime', e.target.value)}
-              fullWidth
-              InputLabelProps={{
-                shrink: true
+              onChange={(newValue) => {
+                handleChange(index, 'startTime', newValue);
               }}
               sx={{
                 '& input': {
                   width: '100%',
-                  height: '30px',
+                  height: '15px',
                   padding: '10px',
+                  fontSize: '12px'
                 },
+              }}
+              slots={{
+                textField: textFieldProps => <TextField
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  {...textFieldProps}
+                />
               }}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <TextField
-              type="time"
+            <TimeField
               label="End Time"
-              variant="outlined"
               value={row.endTime}
-              onChange={(e) => handleChange(index, 'endTime', e.target.value)}
-              fullWidth
-              InputLabelProps={{
-                shrink: true
+              onChange={(newValue) => {
+                handleChange(index, 'endTime', newValue);
               }}
               sx={{
                 '& input': {
                   width: '100%',
-                  height: '30px',
+                  height: '15px',
                   padding: '10px',
+                  fontSize: '12px'
                 },
+              }}
+              slots={{
+                textField: textFieldProps => <TextField
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  {...textFieldProps}
+                />
               }}
             />
           </Grid>
+          
           <Grid item xs={12} sm={3}>
-            <TextField
-              type="text"
+            {/* <TimeField
               label="Manual Time"
-              variant="outlined"
               value={row.manualTime}
-              onChange={(e) => handleChange(index, 'manualTime', e.target.value)}
-              fullWidth
-              InputLabelProps={{
-                shrink: true
+              onChange={(newValue) => {
+                handleChange(index, 'manualTime', newValue);
               }}
               sx={{
                 '& input': {
@@ -252,7 +342,15 @@ const TimeDetailsComponent: React.FC = () => {
                   padding: '10px',
                 },
               }}
-            />
+              slots={{
+                textField: textFieldProps => <TextField
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  {...textFieldProps}
+                />
+              }}
+            /> */}
           </Grid>
           <Grid item xs={12} sm={1}>
             <IconButton onClick={() => handleRemoveRow(index)}>
@@ -262,24 +360,31 @@ const TimeDetailsComponent: React.FC = () => {
         </Grid>
       ))}
         <Grid item xs={12}>
-          <TextField
-            type='time'
+          <TimeField
             label="End Time"
-            variant="outlined"
-            fullWidth
             value={endTime}
-            InputLabelProps={{
-              shrink: true
+            onChange={(newValue) => {
+              setEndTime(newValue);
             }}
             sx={{
               '& input': {
-                height: '30px',
+                width: '100%',
+                height: '15px',
                 padding: '10px',
+                fontSize: '12px'
               },
             }}
-            onChange={(e) => setEndTime(e.target.value)}
-                      />
+            slots={{
+              textField: textFieldProps => <TextField
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                {...textFieldProps}
+              />
+            }}
+          />
         </Grid>
+      </LocalizationProvider>
       </Grid>
       <Grid
         container
@@ -290,9 +395,9 @@ const TimeDetailsComponent: React.FC = () => {
       >
         <Grid item sm={12} md={4}>
           <Button
-            variant="outlined"
+            variant="contained"
             color='success'
-            size='medium'
+            size='small'
             startIcon={<CalculateOutlined />}
             onClick={calculateTime}
           >
@@ -301,29 +406,41 @@ const TimeDetailsComponent: React.FC = () => {
         </Grid>
         <Grid item sm={12} md={4}>
           <Button
-            variant="outlined"
+            variant="contained"
             color='warning'
-            size='medium'
-            startIcon={<ContentCopy />}
+            size='small'
+            disabled={loading}
+            onClick={handleCopy}
+            startIcon={loading ? <CircularProgress size={20} /> : <ContentCopy />}
           >
-            Copy
+            Copy Time
           </Button>
         </Grid>
         <Grid item sm={12} md={4}>
           <Button
-              variant="outlined"
+              variant="contained"
               color='error'
-              size='medium'
+              size='small'
               startIcon={<RestoreOutlined />}
               onClick={resetReportTime}
             >
-            Reset
+            Reset Time
           </Button>
         </Grid>
-        <Grid item md={12} sx={{ p: 3, mt: 3 }}>
+        <Grid item md={12} sx={{ p: 1, mt: 1 }} ref={timeRef}>
           {totalReportingTime}
         </Grid>
       </Grid>
+      <Snackbar
+        open={openMessage}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={handleClose} severity="success">
+          Time copied successfully!
+        </Alert>
+      </Snackbar>
     </>
   )
 }
