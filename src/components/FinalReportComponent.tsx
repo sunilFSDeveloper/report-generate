@@ -2,12 +2,10 @@ import {
   ContentCopy,
 } from '@mui/icons-material';
 import {
-  Alert,
   Button,
   CardContent,
   CardHeader,
   CircularProgress,
-  Snackbar,
   Typography
 } from '@mui/material';
 import React, { useRef, useState } from 'react';
@@ -15,6 +13,7 @@ import { RootState } from '../store/reducer';
 import { useSelector } from 'react-redux';
 import ReactDOM from 'react-dom';
 import Cookies from 'js-cookie';
+import CustomSnackbarComponenet from '../shared/CustomSnackbarComponenet';
   
 const FinalReportComponent: React.FC = () => {
 
@@ -107,16 +106,11 @@ const FinalReportComponent: React.FC = () => {
           <Typography variant="body2">Today's Total Hours: {formatTime(localTime.totalFullTime)}</Typography>
         </CardContent>
       </CardContent>
-      <Snackbar
+      <CustomSnackbarComponenet
+        message='Report copied successfully!'
         open={openMessage}
-        autoHideDuration={6000}
         onClose={handleClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert onClose={handleClose} severity="success">
-          Report copied successfully!
-        </Alert>
-      </Snackbar>
+      />
     </>
   )
 }
